@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/task_list_screen.dart';
+import 'screens/chart_screen.dart';
 import 'screens/task_form_screen.dart';
 import 'screens/change_password_screen.dart';
 import 'config/back4app_config.dart';
@@ -62,6 +63,7 @@ class MyApp extends StatelessWidget {
             '/tasks': (_) => const TaskListScreen(),
             '/task_form': (_) => const TaskFormScreen(),
             '/change_password': (_) => const ChangePasswordScreen(),
+            '/charts': (_) => const ChartScreen(),
           },
         );
       }),

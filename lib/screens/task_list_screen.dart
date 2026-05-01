@@ -141,8 +141,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           return Card(
                             elevation: 2,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: statusColor, width: 3),
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: statusColor, width: 3),
                             ),
                             child: ListTile(
                               title: Text(t.title),
@@ -160,7 +160,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Chip(label: Text(t.status), backgroundColor: statusColor.withOpacity(0.12)),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Text(
+                                      t.status,
+                                      style: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
                                   IconButton(
                                     icon: const Icon(Icons.delete, color: Colors.red),
                                     onPressed: () async {
