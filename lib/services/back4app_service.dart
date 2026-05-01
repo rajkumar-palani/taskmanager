@@ -66,7 +66,13 @@ class Back4AppService {
     final resp = await http.post(url, headers: _makeHeaders(sessionToken: sessionToken), body: jsonEncode(bodyMap));
     if (resp.statusCode == 201) {
       final map = jsonDecode(resp.body) as Map<String, dynamic>;
-      return Task(objectId: map['objectId'], title: task.title, description: task.description, status: task.status);
+      // The response contains objectId and createdAt; build Task accordingly
+      DateTime? created;
+      if (map['createdAt'] is String) {
+        created = DateTime.tryParse(map['createdAt'] as String);
+        if (created != null) created = created.toLocal();
+      }
+      return Task(objectId: map['objectId'], title: task.title, description: task.description, status: task.status, createdAt: created);
     }
     _handleError(resp);
   }

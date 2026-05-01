@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/task.dart';
+// ...existing code... (models are provided via TaskProvider)
 import '../providers/auth_provider.dart';
 import '../providers/task_provider.dart';
 import '../widgets/left_panel.dart';
@@ -15,7 +15,6 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  String? _titleFilter;
   String? _statusFilter;
   final _titleCtrl = TextEditingController();
 
@@ -28,7 +27,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Future<void> _load() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     try {
-      await Provider.of<TaskProvider>(context, listen: false).loadTasks(auth);
+      await Provider.of<TaskProvider>(context, listen: false).loadTasks(auth,
+          titleFilter: _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
+          statusFilter: _statusFilter == 'All' ? null : _statusFilter);
     } catch (e) {
       String message;
       if (e is ParseApiException) {
@@ -44,7 +45,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     try {
       await Provider.of<TaskProvider>(context, listen: false).loadTasks(auth,
-          titleFilter: _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(), statusFilter: _statusFilter);
+          titleFilter: _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(), statusFilter: _statusFilter == 'All' ? null : _statusFilter);
     } catch (e) {
       String message;
       if (e is ParseApiException) {
@@ -54,6 +55,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
       }
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Filter failed: $message')));
     }
+  }
+
+  String _formatDateTime(DateTime? dt) {
+    if (dt == null) return '';
+    final d = dt.toLocal();
+    // Simple formatting: YYYY-MM-DD HH:MM
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '$y-$m-$day $hh:$mm';
   }
 
   @override
@@ -81,27 +94,28 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                        child: TextField(
                         controller: _titleCtrl,
                         decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Filter by title'),
                         onSubmitted: (_) => _applyFilters(),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    DropdownButton<String>(
-                      value: _statusFilter,
-                      hint: const Text('Status'),
-                      items: const [
-                        DropdownMenuItem(value: 'Pending', child: Text('Pending')),
-                        DropdownMenuItem(value: 'InProgress', child: Text('In Progress')),
-                        DropdownMenuItem(value: 'Complete', child: Text('Complete')),
-                      ],
-                      onChanged: (v) => setState(() {
-                        _statusFilter = v;
-                        _applyFilters();
-                      }),
-                    ),
-                    IconButton(onPressed: () => setState(() { _statusFilter = null; _titleCtrl.clear(); _applyFilters(); }), icon: const Icon(Icons.clear)),
+                        DropdownButton<String?>(
+                          value: _statusFilter,
+                          hint: const Text('Status'),
+                          items: const [
+                            DropdownMenuItem(value: 'All', child: Text('All')),
+                            DropdownMenuItem(value: 'Pending', child: Text('Pending')),
+                            DropdownMenuItem(value: 'InProgress', child: Text('In Progress')),
+                            DropdownMenuItem(value: 'Complete', child: Text('Complete')),
+                          ],
+                          onChanged: (v) => setState(() {
+                            _statusFilter = v;
+                            _applyFilters();
+                          }),
+                        ),
+                        IconButton(onPressed: () => setState(() { _statusFilter = 'All'; _titleCtrl.clear(); _applyFilters(); }), icon: const Icon(Icons.clear)),
                   ],
                 ),
               ),
@@ -116,41 +130,71 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       )
                     : ListView.separated(
                         itemCount: tasks.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final t = tasks[index];
-                          return ListTile(
-                            title: Text(t.title),
-                            subtitle: Text(t.description),
-                            trailing: Chip(label: Text(t.status)),
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskFormScreen(task: t))).then((v) => _load()),
-                            onLongPress: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text('Delete Task'),
-                                  content: const Text('Are you sure you want to delete this task?'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                try {
-                                  await Provider.of<TaskProvider>(context, listen: false).deleteTask(auth, t.objectId!);
-                                  _load();
-                                } catch (e) {
-                                  String message;
-                                  if (e is ParseApiException) {
-                                    message = Back4AppService.mapParseErrorToMessage(e);
-                                  } else {
-                                    message = e.toString();
-                                  }
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $message')));
-                                }
-                              }
-                            },
+                          Color statusColor = Colors.grey;
+                          if (t.status == 'Pending') statusColor = Colors.red;
+                          else if (t.status == 'InProgress') statusColor = Colors.orange;
+                          else if (t.status == 'Complete') statusColor = Colors.green;
+
+                          return Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: statusColor, width: 3),
+                            ),
+                            child: ListTile(
+                              title: Text(t.title),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(t.description),
+                                  if (t.createdAt != null) ...[
+                                    const SizedBox(height: 6),
+                                    Text('Created: ${_formatDateTime(t.createdAt)}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                                  ]
+                                ],
+                              ),
+                              isThreeLine: t.createdAt != null,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Chip(label: Text(t.status), backgroundColor: statusColor.withOpacity(0.12)),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: const Text('Delete Task'),
+                                          content: const Text('Are you sure you want to delete this task?'),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true) {
+                                        try {
+                                          await Provider.of<TaskProvider>(context, listen: false).deleteTask(auth, t.objectId!);
+                                          _load();
+                                        } catch (e) {
+                                          String message;
+                                          if (e is ParseApiException) {
+                                            message = Back4AppService.mapParseErrorToMessage(e);
+                                          } else {
+                                            message = e.toString();
+                                          }
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $message')));
+                                        }
+                                      }
+                                    },
+                                  )
+                                ],
+                              ),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskFormScreen(task: t))).then((v) => _load()),
+                            ),
                           );
                         },
                       ),

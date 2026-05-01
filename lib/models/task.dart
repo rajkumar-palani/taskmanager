@@ -4,6 +4,7 @@ class Task {
   String description;
   String status; // Pending, InProgress, Complete
   String? ownerId;
+  DateTime? createdAt;
 
   Task({
     this.objectId,
@@ -11,6 +12,7 @@ class Task {
     required this.description,
     required this.status,
     this.ownerId,
+    this.createdAt,
   });
 
   factory Task.fromParse(Map<String, dynamic> map) {
@@ -21,12 +23,24 @@ class Task {
       ownerId = owner['objectId'] as String?;
     }
 
+    // Parse createdAt if present (Parse returns ISO8601 timestamp string)
+    DateTime? created;
+    final createdRaw = map['createdAt'];
+    if (createdRaw is String && createdRaw.isNotEmpty) {
+      try {
+        created = DateTime.tryParse(createdRaw)?.toLocal();
+      } catch (_) {
+        created = null;
+      }
+    }
+
     return Task(
       objectId: map['objectId'] as String?,
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       status: map['status'] ?? 'Pending',
       ownerId: ownerId,
+      createdAt: created,
     );
   }
 
