@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Welcome back', style: Theme.of(context).textTheme.headlineSmall),
+                  Text('Task Manager', style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 8),
                   Text('Please sign in to continue', style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
@@ -79,8 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
-                          width: double.infinity,
+                          width: 200,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                             onPressed: _loading ? null : _submit,
                             child: _loading ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Login'),
                           ),
@@ -88,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: () => Navigator.pushNamed(context, '/register'),
-                          child: const Text('Register a new account'),
+                          child: const Text('New user, signup here'),
                         )
                       ],
                     ),

@@ -34,6 +34,14 @@ class LeftPanel extends StatelessWidget {
               title: const Text('Change Password'),
               onTap: onChangePassword,
             ),
+            ListTile(
+              leading: const Icon(Icons.pie_chart),
+              title: const Text('Charts'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/charts');
+              },
+            ),
             const Divider(),
             ListTile(
               leading: Icon(theme.mode == ThemeMode.light ? Icons.light_mode : Icons.dark_mode),
