@@ -14,12 +14,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
   bool _loading = false;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
@@ -27,7 +29,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await Provider.of<AuthProvider>(context, listen: false).register(_emailCtrl.text.trim(), _passCtrl.text);
+      await Provider.of<AuthProvider>(context, listen: false)
+          .register(_nameCtrl.text.trim(), _emailCtrl.text.trim(), _passCtrl.text);
       Navigator.pushReplacementNamed(context, '/tasks');
     } catch (e) {
       String message;
@@ -59,6 +62,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
+                      controller: _nameCtrl,
+                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      keyboardType: TextInputType.name,
+                      validator: (v) => (v == null || v.isEmpty) ? 'Enter name' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
                       controller: _emailCtrl,
                       decoration: const InputDecoration(labelText: 'Email'),
                       keyboardType: TextInputType.emailAddress,
@@ -86,4 +96,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-

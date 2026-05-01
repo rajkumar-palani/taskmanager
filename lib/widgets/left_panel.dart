@@ -20,9 +20,9 @@ class LeftPanel extends StatelessWidget {
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(auth.username ?? 'Guest'),
-              accountEmail: Text(auth.username ?? ''),
-              currentAccountPicture: CircleAvatar(child: Text((auth.username ?? 'G').substring(0, 1).toUpperCase())),
+              accountName: Text(auth.username ?? auth.email ?? 'Guest'),
+              accountEmail: Text(auth.email ?? ''),
+              currentAccountPicture: CircleAvatar(child: Text(((auth.username ?? auth.email ?? 'G').substring(0, 1)).toUpperCase())),
             ),
             ListTile(
               leading: const Icon(Icons.list),
