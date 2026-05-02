@@ -27,9 +27,11 @@ class Back4AppService {
   }
 
   // Users
-  Future<Map<String, dynamic>> signUp(String email, String password) async {
+  Future<Map<String, dynamic>> signUp(String email, String password, {String? name}) async {
     final url = Uri.parse('${Back4AppConfig.baseUrl}/users');
-    final body = jsonEncode({'username': email, 'password': password, 'email': email});
+    final bodyMap = {'username': name, 'password': password, 'email': email};
+    if (name != null && name.isNotEmpty) bodyMap['name'] = name;
+    final body = jsonEncode(bodyMap);
     final resp = await http.post(url, headers: _makeHeaders(), body: body);
     if (resp.statusCode == 201) {
       return jsonDecode(resp.body);
@@ -50,6 +52,16 @@ class Back4AppService {
     final url = Uri.parse('${Back4AppConfig.baseUrl}/users/$userId');
     final resp = await http.put(url, headers: _makeHeaders(sessionToken: sessionToken), body: jsonEncode({'password': newPassword}));
     if (resp.statusCode == 200) return;
+    _handleError(resp);
+  }
+
+  /// Fetch a user object by id. Requires a valid session token with read access.
+  Future<Map<String, dynamic>> getUser(String sessionToken, String userId) async {
+    final url = Uri.parse('${Back4AppConfig.baseUrl}/users/$userId');
+    final resp = await http.get(url, headers: _makeHeaders(sessionToken: sessionToken));
+    if (resp.statusCode == 200) {
+      return jsonDecode(resp.body) as Map<String, dynamic>;
+    }
     _handleError(resp);
   }
 
