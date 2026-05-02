@@ -17,8 +17,8 @@ Future<void> main() async {
   // overwritten by a .env or secure storage when Back4AppConfig.init() runs.
   Back4AppConfig.setCredentials(
     baseUrl: 'https://parseapi.back4app.com',
-    appId: 'KtERNPAKOYvoZJi8aG2FT7i0839fg4ca7QdUCYJ2',
-    restApiKey: 'q1w3Il6PFBjVYYZtlBzDehUhtBG4XpI06Jt7ltZV',
+    appId: '',
+    restApiKey: '',
   );
   // Initialize config (loads dotenv/secure storage overrides). Await so
   // services reading Back4AppConfig immediately will have correct values.
